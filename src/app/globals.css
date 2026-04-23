@@ -1,26 +1,39 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+  /* Brand palette — extracted from Figma file je3wfSZDd8oZUsH7rsCpOi */
+  --color-ink: #28020d;          /* primary wine — bg/buttons/body copy on light */
+  --color-ink-deep: #200009;     /* hero gradient stop */
+  --color-plum: #50091e;         /* headings on light backgrounds */
+  --color-plum-soft: #6a122a;    /* secondary plum text */
+  --color-cream: #f5ebe2;        /* primary light surface + text on dark */
+  --color-cream-warm: #ffe8d3;   /* warmer cream used in Problem section gradient */
+
+  /* Quote card palette */
+  --color-quote-green: #cde0b4;
+  --color-quote-green-ink: #2c3c17;
+  --color-quote-blue: #c6d9ff;
+  --color-quote-blue-ink: #2e3664;
+  --color-quote-pink: #f5c3e3;
+  --color-quote-pink-ink: #644b62;
+
+  /* Purpose section */
+  --color-purpose-pink: #e7b8e2;
+
+  /* Typography — Fedro is the licensed display face from the Figma source */
+  --font-sans: var(--font-figtree), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-fedro), ui-serif, Georgia, serif;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+html,
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-cream);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+.font-display {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
 }
