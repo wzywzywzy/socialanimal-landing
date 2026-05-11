@@ -1,69 +1,138 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
 type Section = "problem" | "product" | "purpose";
 
-type Variant =
-  | "dark"     // light text for use over dark/image backgrounds
-  | "light";   // dark text for use over cream/pink backgrounds
-
-interface NavbarProps {
-  active?: Section;
-  variant?: Variant;
-  /** Join Waitlist pill fill — defaults to ink; pass "cream" when the bar sits on ink backgrounds. */
-  ctaTheme?: "ink" | "cream";
-}
-
-const LINKS: { id: Section; label: string; href: string }[] = [
-  { id: "problem", label: "Problem", href: "#problem" },
-  { id: "product", label: "Product", href: "#product" },
-  { id: "purpose", label: "Purpose", href: "#purpose" },
+const LINKS: { id: Section; label: string; targetId: string; centerX: string }[] = [
+  { id: "problem", label: "Problem", targetId: "importance", centerX: "30.6%" },
+  { id: "product", label: "Product", targetId: "product", centerX: "48.25%" },
+  { id: "purpose", label: "Purpose", targetId: "purpose", centerX: "65.68%" },
 ];
 
-export function Navbar({ active, variant = "light", ctaTheme = "ink" }: NavbarProps) {
-  const textColor = variant === "dark" ? "text-cream" : "text-ink";
-  const ctaBg = ctaTheme === "ink" ? "bg-ink text-cream" : "bg-cream text-ink";
+const NAV_CLEARANCE = 0;
+
+function getTargetTop(target: HTMLElement) {
+  return Math.max(
+    0,
+    target.getBoundingClientRect().top + window.scrollY - NAV_CLEARANCE,
+  );
+}
+
+export function Navbar() {
+  const [active, setActive] = useState<Section>("problem");
+  const [visible, setVisible] = useState(false);
+  const ctaIsDark = active !== "product";
+
+  useEffect(() => {
+    const syncActive = () => {
+      const hero = document.getElementById("top");
+      const product = document.getElementById("product");
+      const purpose = document.getElementById("purpose");
+      const y = window.scrollY + 180;
+
+      setVisible(window.scrollY > (hero?.offsetHeight ?? window.innerHeight) * 0.65);
+
+      if (purpose && y >= purpose.offsetTop) {
+        setActive("purpose");
+      } else if (product && y >= product.offsetTop) {
+        setActive("product");
+      } else {
+        setActive("problem");
+      }
+    };
+
+    syncActive();
+    window.addEventListener("scroll", syncActive, { passive: true });
+    window.addEventListener("resize", syncActive);
+    return () => {
+      window.removeEventListener("scroll", syncActive);
+      window.removeEventListener("resize", syncActive);
+    };
+  }, []);
+
+  useEffect(() => {
+    const syncHashScroll = () => {
+      const targetId = window.location.hash.replace("#", "");
+      if (!targetId) return;
+      const target = document.getElementById(targetId);
+      if (!target) return;
+      window.scrollTo({ top: getTargetTop(target), behavior: "auto" });
+    };
+
+    const timeout = window.setTimeout(syncHashScroll, 80);
+    window.addEventListener("hashchange", syncHashScroll);
+    return () => {
+      window.clearTimeout(timeout);
+      window.removeEventListener("hashchange", syncHashScroll);
+    };
+  }, []);
+
+  const scrollToTarget = (targetId: string) => {
+    const target = document.getElementById(targetId);
+    if (!target) return;
+
+    window.scrollTo({
+      top: getTargetTop(target),
+      behavior: "smooth",
+    });
+    window.history.replaceState(null, "", `#${targetId}`);
+    window.dispatchEvent(new Event("hashchange"));
+  };
 
   return (
-    <header className="pointer-events-none fixed top-0 left-0 right-0 z-50 flex justify-center px-6 pt-6 md:pt-[53px]">
-      <div className="pointer-events-auto w-full max-w-[1479px] h-[70px] md:h-[105px] rounded-full border-4 border-white/50 bg-white/10 backdrop-blur-[15px] flex items-center justify-between px-4 md:px-8 shadow-[0_4px_32px_rgba(0,0,0,0.08)]">
-        <Link href="/" aria-label="Social Animal home" className="flex items-center">
-          {/* Logo asset is cream-filled. On light backgrounds, tint via CSS mask.
-              Explicit width/height because the source SVG has preserveAspectRatio="none". */}
-          <span
-            aria-hidden
-            className={`block h-10 md:h-[70px] w-[42px] md:w-[73px] ${
-              variant === "dark" ? "bg-cream" : "bg-ink"
-            }`}
-            style={{
-              WebkitMaskImage: "url(/assets/logo.svg)",
-              maskImage: "url(/assets/logo.svg)",
-              WebkitMaskRepeat: "no-repeat",
-              maskRepeat: "no-repeat",
-              WebkitMaskSize: "contain",
-              maskSize: "contain",
-              WebkitMaskPosition: "center",
-              maskPosition: "center",
-            }}
-          />
-        </Link>
+    <header
+      className={`pointer-events-none fixed inset-x-0 top-0 z-50 hidden h-[158px] transition-opacity duration-300 md:block ${
+        visible ? "opacity-100" : "opacity-0"
+      }`}
+    >
+      <div className="relative mx-auto h-[158px] w-full max-w-[1920px]">
+        <Link
+          href="/"
+          aria-label="Social Animal home"
+          className="pointer-events-auto absolute left-[8.65%] top-[71px] block h-[69.529px] w-[73.106px] bg-ink transition-transform hover:scale-[1.04]"
+          style={{
+            WebkitMaskImage: "url(/assets/logo.svg)",
+            maskImage: "url(/assets/logo.svg)",
+            WebkitMaskPosition: "center",
+            maskPosition: "center",
+            WebkitMaskRepeat: "no-repeat",
+            maskRepeat: "no-repeat",
+            WebkitMaskSize: "contain",
+            maskSize: "contain",
+          }}
+        />
 
-        <nav className={`hidden md:flex items-center gap-[110px] text-[28px] tracking-[-0.02em] ${textColor}`}>
+        <div
+          className="pointer-events-auto absolute left-[14.32%] top-[53px] h-[105px] w-[77.03%] rounded-full border-4 border-white/50 bg-[rgba(117,117,117,0.1)] shadow-[0_24px_70px_rgba(40,2,13,0.14)] backdrop-blur-[15px]"
+          aria-hidden
+        />
+
+        <nav className="pointer-events-auto absolute inset-x-0 top-[84px] h-[44px] text-center text-[28px] leading-[43.2px] tracking-[-0.02em]">
           {LINKS.map((link) => (
-            <a
+            <button
               key={link.id}
-              href={link.href}
-              className={`transition-opacity hover:opacity-100 ${
+              type="button"
+              onClick={() => scrollToTarget(link.targetId)}
+              className={`absolute -translate-x-1/2 whitespace-nowrap transition-opacity hover:opacity-100 ${
                 active === link.id ? "font-semibold opacity-100" : "font-light opacity-80"
               }`}
+              style={{
+                left: link.centerX,
+                color: active === "product" && link.id !== "problem" ? "#fae9da" : "#28020d",
+              }}
             >
               {link.label}
-            </a>
+            </button>
           ))}
         </nav>
 
         <Link
           href="/waitlist"
-          className={`flex h-[56px] md:h-[70px] items-center justify-center rounded-full px-6 md:px-10 text-base md:text-[24px] font-semibold tracking-[-0.02em] transition-transform hover:scale-[1.02] ${ctaBg}`}
+          className={`pointer-events-auto absolute left-[78.39%] top-[71px] flex h-[70px] w-[221px] items-center justify-center rounded-full text-center text-[24px] font-semibold leading-[28.8px] tracking-[-0.02em] shadow-[0_10px_30px_rgba(40,2,13,0.08)] transition-transform hover:scale-[1.02] ${
+            ctaIsDark ? "bg-ink text-cream" : "bg-cream text-ink"
+          }`}
         >
           Join Waitlist
         </Link>

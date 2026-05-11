@@ -1,13 +1,7 @@
 import type { Metadata } from "next";
-import { Figtree } from "next/font/google";
 import localFont from "next/font/local";
 import "./globals.css";
-
-const figtree = Figtree({
-  variable: "--font-figtree",
-  subsets: ["latin"],
-  display: "swap",
-});
+import { SmoothScrollProvider } from "@/components/SmoothScrollProvider";
 
 const fedro = localFont({
   variable: "--font-fedro",
@@ -36,9 +30,11 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${figtree.variable} ${fedro.variable} antialiased`}
+      className={`${fedro.variable} antialiased`}
     >
-      <body className="bg-cream text-ink font-sans">{children}</body>
+      <body className="bg-cream text-ink font-sans">
+        <SmoothScrollProvider>{children}</SmoothScrollProvider>
+      </body>
     </html>
   );
 }
