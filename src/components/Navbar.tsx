@@ -104,38 +104,41 @@ export function Navbar() {
           }}
         />
 
-        <div
-          className="pointer-events-auto absolute left-[14.32%] top-[53px] h-[105px] w-[77.03%] rounded-full border-4 border-white/50 bg-[rgba(117,117,117,0.1)] shadow-[0_24px_70px_rgba(40,2,13,0.14)] backdrop-blur-[15px]"
-          aria-hidden
-        />
+        {/* Single pill containing nav links + Join Waitlist CTA.
+            Width 80.33% spans from 14.32% to 94.65% per Figma Frame 55. */}
+        <div className="pointer-events-auto absolute left-[14.32%] top-[53px] flex h-[105px] w-[80.33%] items-center rounded-full bg-[#ead8c5]/55 pl-[60px] pr-[12px] shadow-[0_24px_70px_rgba(40,2,13,0.12)] backdrop-blur-[15px]">
+          <nav className="flex flex-1 items-center justify-around text-[28px] leading-[43.2px] tracking-[-0.02em]">
+            {LINKS.map((link) => (
+              <button
+                key={link.id}
+                type="button"
+                onClick={() => scrollToTarget(link.targetId)}
+                className={`whitespace-nowrap transition-opacity hover:opacity-100 ${
+                  active === link.id
+                    ? "font-semibold opacity-100"
+                    : "font-light opacity-80"
+                }`}
+                style={{
+                  color:
+                    active === "product" && link.id !== "problem"
+                      ? "#fae9da"
+                      : "#28020d",
+                }}
+              >
+                {link.label}
+              </button>
+            ))}
+          </nav>
 
-        <nav className="pointer-events-auto absolute inset-x-0 top-[84px] h-[44px] text-center text-[28px] leading-[43.2px] tracking-[-0.02em]">
-          {LINKS.map((link) => (
-            <button
-              key={link.id}
-              type="button"
-              onClick={() => scrollToTarget(link.targetId)}
-              className={`absolute -translate-x-1/2 whitespace-nowrap transition-opacity hover:opacity-100 ${
-                active === link.id ? "font-semibold opacity-100" : "font-light opacity-80"
-              }`}
-              style={{
-                left: link.centerX,
-                color: active === "product" && link.id !== "problem" ? "#fae9da" : "#28020d",
-              }}
-            >
-              {link.label}
-            </button>
-          ))}
-        </nav>
-
-        <Link
-          href="/waitlist"
-          className={`pointer-events-auto absolute left-[78.39%] top-[71px] flex h-[70px] w-[221px] items-center justify-center rounded-full text-center text-[24px] font-semibold leading-[28.8px] tracking-[-0.02em] shadow-[0_10px_30px_rgba(40,2,13,0.08)] transition-transform hover:scale-[1.02] ${
-            ctaIsDark ? "bg-ink text-cream" : "bg-cream text-ink"
-          }`}
-        >
-          Join Waitlist
-        </Link>
+          <Link
+            href="/waitlist"
+            className={`ml-6 flex h-[73px] w-[221px] shrink-0 items-center justify-center rounded-full text-center text-[24px] font-semibold leading-[28.8px] tracking-[-0.02em] shadow-[0_10px_30px_rgba(40,2,13,0.18)] transition-transform hover:scale-[1.02] ${
+              ctaIsDark ? "bg-ink text-cream" : "bg-cream text-ink"
+            }`}
+          >
+            Join Waitlist
+          </Link>
+        </div>
       </div>
     </header>
   );

@@ -59,7 +59,7 @@ export function Problem() {
             at global y=0 and ending at 1080, center is y=540, so the headline
             sits at global y ≈ 474..540. */}
         <h2
-          className="font-display absolute left-1/2 -translate-x-1/2 text-center text-plum"
+          className="font-display absolute left-1/2 z-10 -translate-x-1/2 text-center text-plum"
           style={{
             top: y(474),             // 540 - 66
             width: w(926),           // 926/1920
@@ -88,7 +88,11 @@ export function Problem() {
           title="CEO of Microsoft."
           bylineStyle={{ left: "12.1%", top: "65.36%", width: "40.08%" }}
           avatar="/assets/avatar-nadella.png"
-          avatarStyle={{ left: x(507), top: y(825) }}
+          avatarStyle={{
+            left: x(487),       // 507 - 20 (re-center after 120→160)
+            top: y(805),        // 825 - 20
+            objectPosition: "50% 25%",
+          }}
         />
 
         {/* 557:638 — Pink Colvin blob (1199, 189, 529×319.5) */}
@@ -109,7 +113,11 @@ export function Problem() {
           title="Expert on the future of work."
           bylineStyle={{ left: "12.1%", top: "61.19%", width: "40.08%" }}
           avatar="/assets/avatar-colvin.png"
-          avatarStyle={{ left: x(1563), top: y(344.5) }}
+          avatarStyle={{
+            left: x(1543),
+            top: y(324.5),
+            objectPosition: "50% 22%",
+          }}
         />
 
         {/* 557:644 — Blue Dimon card (980, 755, 529×358) */}
@@ -129,7 +137,12 @@ export function Problem() {
           title="CEO of JP Morgan Chase."
           bylineStyle={{ left: "12.1%", top: "65.36%", width: "40.08%" }}
           avatar="/assets/avatar-dimon.png"
-          avatarStyle={{ left: x(1344), top: y(949), withBackdrop: true }}
+          avatarStyle={{
+            left: x(1324),
+            top: y(929),
+            withBackdrop: true,
+            objectPosition: "50% 30%",
+          }}
         />
 
         {/* ── 3B layer ─────────────────────────────────────────── */}
@@ -324,7 +337,10 @@ interface QuoteCardProps {
   style: React.CSSProperties;
   quoteStyle: React.CSSProperties;
   bylineStyle: React.CSSProperties;
-  avatarStyle: React.CSSProperties & { withBackdrop?: boolean };
+  avatarStyle: React.CSSProperties & {
+    withBackdrop?: boolean;
+    objectPosition?: string;
+  };
 }
 
 const TONE: Record<Tone, { bg: string; quoteInk: string; bylineInk: string }> = {
@@ -346,7 +362,7 @@ function QuoteCard({
   avatarStyle,
 }: QuoteCardProps) {
   const { bg, quoteInk, bylineInk } = TONE[tone];
-  const { withBackdrop, ...avatarPos } = avatarStyle;
+  const { withBackdrop, objectPosition, ...avatarPos } = avatarStyle;
 
   const quoteFontSize = typeof quoteStyle.fontSize === "number"
     ? `clamp(0.95rem, ${(quoteStyle.fontSize / CANVAS_W) * 100}vw, ${quoteStyle.fontSize / 16}rem)`
@@ -405,7 +421,7 @@ function QuoteCard({
       <div
         className="absolute rounded-full overflow-hidden"
         style={{
-          width: w(120),
+          width: w(160),
           aspectRatio: "1 / 1",
           ...avatarPos,
         }}
@@ -418,7 +434,8 @@ function QuoteCard({
           alt=""
           fill
           className="object-cover"
-          sizes="120px"
+          sizes="160px"
+          style={objectPosition ? { objectPosition } : undefined}
         />
       </div>
     </>

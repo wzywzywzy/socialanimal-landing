@@ -255,13 +255,19 @@ function FrostedInput({
   return (
     <input
       type={type}
-      className={`h-[95px] w-full rounded-full border-2 border-[#fffefe]/70 bg-[#ead8c5]/75 px-[42px] text-[28px] tracking-[-0.03em] text-plum outline-none backdrop-blur-[40px] placeholder:text-[#c8ad93] focus:border-white/90 disabled:cursor-not-allowed disabled:opacity-70 ${className}`}
+      className={`h-[95px] w-full rounded-full px-[42px] text-[28px] tracking-[-0.03em] text-plum outline-none placeholder:text-plum/45 focus:ring-2 focus:ring-white/60 disabled:cursor-not-allowed disabled:opacity-70 ${className}`}
       style={{
-        backgroundBlendMode: "normal, soft-light, normal",
+        // Per Figma Rectangle 9: a soft frosted layer over the cream background.
+        // The texture asset is greyscale, so we blend it as soft-light over a
+        // warm cream base. Result reads as cream with subtle grain, matching
+        // the way `backdrop-filter: blur` would tint the page below.
+        backgroundColor: "#ead8c5",
         backgroundImage:
-          "linear-gradient(160.49deg, rgba(255,248,241,0.78) 0%, rgba(234,216,197,0.74) 119.12%), url(/assets/waitlist-input-texture.png), linear-gradient(0deg, #ead8c5, #ead8c5)",
-        backgroundPosition: "center",
-        backgroundSize: "cover",
+          "linear-gradient(108.58deg, rgba(255,248,240,0.5) 0%, rgba(255,248,240,0) 119.12%), url(/assets/waitlist-input-texture.png)",
+        backgroundSize: "cover, cover",
+        backgroundPosition: "center, center",
+        backgroundRepeat: "no-repeat, no-repeat",
+        backgroundBlendMode: "normal, soft-light",
       }}
       {...props}
     />
