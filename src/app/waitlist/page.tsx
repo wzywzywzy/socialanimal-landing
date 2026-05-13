@@ -11,6 +11,7 @@ type SubmitStatus =
 export default function WaitlistPage() {
   const [registered, setRegistered] = useState(false);
   const [alreadyRegistered, setAlreadyRegistered] = useState(false);
+  const [submittedName, setSubmittedName] = useState("");
   const [status, setStatus] = useState<SubmitStatus>({ kind: "idle" });
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -56,6 +57,7 @@ export default function WaitlistPage() {
 
       const body = (await res.json()) as { alreadyRegistered?: boolean };
       setAlreadyRegistered(Boolean(body.alreadyRegistered));
+      setSubmittedName(firstName);
       setRegistered(true);
       setStatus({ kind: "idle" });
       window.history.replaceState(null, "", "/waitlist#registered");
@@ -111,9 +113,12 @@ export default function WaitlistPage() {
           }}
         />
 
-        <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-[1920px] flex-col items-center px-6 pt-[27.3vh] text-center">
+        <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-[1920px] flex-col items-center px-6 pt-[19vh] pb-[10vh] text-center">
           {registered ? (
-            <SuccessState alreadyRegistered={alreadyRegistered} />
+            <SuccessState
+              alreadyRegistered={alreadyRegistered}
+              firstName={submittedName}
+            />
           ) : (
             <>
               <h1 className="font-display text-[clamp(2.75rem,3.44vw,4.125rem)] font-medium leading-none tracking-[-0.02em] text-plum">
@@ -216,26 +221,27 @@ export default function WaitlistPage() {
   );
 }
 
-function SuccessState({ alreadyRegistered }: { alreadyRegistered: boolean }) {
+function SuccessState({
+  alreadyRegistered,
+  firstName,
+}: {
+  alreadyRegistered: boolean;
+  firstName: string;
+}) {
+  const displayName = firstName.trim() || "friend";
+  const headline = alreadyRegistered
+    ? `You're already in, ${displayName}!`
+    : `You're in, ${displayName}!`;
+
   return (
     <div className="flex w-full max-w-[900px] flex-col items-center text-center">
-      <h1 className="font-display text-[clamp(4rem,6.8vw,8rem)] font-medium leading-[0.9] tracking-[-0.02em] text-plum">
-        {alreadyRegistered ? "You're already in" : "You are in"}
+      <h1 className="font-display text-[clamp(3rem,5.2vw,6rem)] font-medium leading-[0.95] tracking-[-0.02em] text-plum">
+        {headline}
       </h1>
       <p className="mt-9 max-w-[710px] text-[clamp(1.125rem,1.35vw,1.625rem)] leading-[1.25] tracking-[-0.02em] text-plum">
-        {alreadyRegistered ? (
-          <>
-            Looks like this email is already on the priority access list.
-            <br />
-            We&apos;ll be in touch as soon as your early access is ready.
-          </>
-        ) : (
-          <>
-            Thanks for joining Social Animal&apos;s priority access list.
-            <br />
-            We&apos;ll let you know as soon as your early access is ready.
-          </>
-        )}
+        Your spot on the Social Animal waitlist is confirmed.
+        <br />
+        We&apos;ll be in touch with early access details soon.
       </p>
       <Link
         href="/"

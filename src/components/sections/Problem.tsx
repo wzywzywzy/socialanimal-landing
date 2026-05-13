@@ -177,21 +177,28 @@ export function Problem() {
           />
         </div>
 
-        {/* 557:718 — man portrait (161.92, 1527, 717×753) */}
+        {/* 557:718 — man portrait (161.92, 1527, 717×753).
+            Per user feedback: image is mirrored horizontally (so the face
+            looks toward the body copy on the right), and the bottom is
+            cropped further so the legs/feet are out of view. We shorten
+            the container height and shift it down so the face stays at the
+            same vertical position, while the bottom of the image falls
+            below the section. */}
         <div
-          className="absolute pointer-events-none"
+          className="absolute pointer-events-none overflow-hidden"
           style={{
             left: x(161.92),
-            top: y(1527),            // 1200 + 327
+            top: y(1527),
             width: w(717),
-            height: h(753),
+            height: h(620),          // was 753 — crops 133px off the bottom
           }}
         >
           <Image
             src="/assets/problem-man.png"
             alt=""
             fill
-            className="object-contain object-bottom"
+            className="object-contain object-top"
+            style={{ transform: "scaleX(-1)" }}
             sizes="37vw"
           />
         </div>
@@ -230,13 +237,15 @@ export function Problem() {
           <span className="font-sans font-semibold italic">watching</span>.
         </h2>
 
-        {/* 557:738 — body copy (1205, 1903, 568×120)
-            Global Y: 1200 + 703 = 1903 */}
+        {/* 557:738 — body copy (1205, 2040, 568×120). Per user feedback,
+            pushed down from y=1903 → y=2040 (+137px figma ≈ +110 vp px at
+            1527 viewport) to add visible breathing room between the
+            headline and the paragraph at typical viewport widths. */}
         <p
           className="absolute text-plum font-sans"
           style={{
             left: x(1205),
-            top: y(1903),
+            top: y(2040),
             width: w(568),
             fontSize: "clamp(1rem, 1.25vw, 1.5rem)",
             lineHeight: "30px",

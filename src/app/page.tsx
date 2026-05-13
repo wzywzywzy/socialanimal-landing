@@ -3,7 +3,6 @@ import { Navbar } from "@/components/Navbar";
 import { Problem } from "@/components/sections/Problem";
 import { Product } from "@/components/sections/Product";
 import { Purpose } from "@/components/sections/Purpose";
-import { PageSnapController } from "@/components/PageSnapController";
 
 // overflow-x: clip on the wrapper contains horizontal overflow from
 // the 1920px design canvas on narrower viewports, without turning
@@ -14,7 +13,6 @@ export default function Home() {
   return (
     <main style={{ overflowX: "clip" }}>
       <Navbar />
-      <PageSnapController />
       <Hero />
       <Problem />
       <Product />

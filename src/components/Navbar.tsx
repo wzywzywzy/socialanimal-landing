@@ -91,7 +91,7 @@ export function Navbar() {
         <Link
           href="/"
           aria-label="Social Animal home"
-          className="pointer-events-auto absolute left-[8.65%] top-[71px] block h-[69.529px] w-[73.106px] bg-ink transition-transform hover:scale-[1.04]"
+          className="pointer-events-auto absolute left-[3.5%] top-[71px] block h-[69.529px] w-[73.106px] bg-ink transition-transform hover:scale-[1.04]"
           style={{
             WebkitMaskImage: "url(/assets/logo.svg)",
             maskImage: "url(/assets/logo.svg)",
