@@ -34,9 +34,15 @@ export function Navbar() {
 
       setVisible(window.scrollY > (hero?.offsetHeight ?? window.innerHeight) * 0.65);
 
-      if (purpose && y >= purpose.offsetTop) {
+      // Use absolute document position (rect.top + scrollY), not offsetTop —
+      // offsetTop is relative to offsetParent, which the sticky mobile
+      // wrappers change, so it no longer reflects the true scroll position.
+      const docTop = (el: HTMLElement | null) =>
+        el ? el.getBoundingClientRect().top + window.scrollY : Infinity;
+
+      if (purpose && y >= docTop(purpose)) {
         setActive("purpose");
-      } else if (product && y >= product.offsetTop) {
+      } else if (product && y >= docTop(product)) {
         setActive("product");
       } else {
         setActive("problem");
@@ -82,12 +88,71 @@ export function Navbar() {
   };
 
   return (
-    <header
-      className={`pointer-events-none fixed inset-x-0 top-0 z-50 hidden h-[158px] transition-opacity duration-300 md:block ${
-        visible ? "opacity-100" : "opacity-0"
-      }`}
-    >
-      <div className="relative mx-auto h-[158px] w-full max-w-[1920px]">
+    <>
+      {/* ───────── Mobile header (Figma mobile frame 241+) ─────────
+          Compact logo + glass pill (Problem/Product/Purpose) + dark Join.
+          Same scroll-spy + scroll-to behaviour as desktop; appears after
+          Hero just like desktop. */}
+      <header
+        className={`pointer-events-none fixed inset-x-0 top-0 z-50 block h-[88px] transition-opacity duration-300 md:hidden ${
+          visible ? "opacity-100" : "opacity-0"
+        }`}
+      >
+        <div className="relative mx-auto flex h-[88px] w-full items-center gap-3 px-4">
+          <Link
+            href="/"
+            aria-label="Social Animal home"
+            className="pointer-events-auto block h-[44px] w-[46px] shrink-0 bg-ink transition-transform hover:scale-[1.04]"
+            style={{
+              WebkitMaskImage: "url(/assets/logo.svg)",
+              maskImage: "url(/assets/logo.svg)",
+              WebkitMaskPosition: "center",
+              maskPosition: "center",
+              WebkitMaskRepeat: "no-repeat",
+              maskRepeat: "no-repeat",
+              WebkitMaskSize: "contain",
+              maskSize: "contain",
+            }}
+          />
+
+          <div className="pointer-events-auto flex h-[52px] flex-1 items-center rounded-full bg-[#ead8c5]/55 pl-4 pr-1.5 shadow-[0_12px_35px_rgba(40,2,13,0.12)] backdrop-blur-[15px]">
+            <nav className="flex flex-1 items-center justify-around text-[13px] leading-none tracking-[-0.02em]">
+              {LINKS.map((link) => (
+                <button
+                  key={link.id}
+                  type="button"
+                  onClick={() => scrollToTarget(link.targetId)}
+                  className={`whitespace-nowrap transition-opacity ${
+                    active === link.id
+                      ? "font-semibold opacity-100"
+                      : "font-light opacity-80"
+                  }`}
+                  style={{ color: "#28020d" }}
+                >
+                  {link.label}
+                </button>
+              ))}
+            </nav>
+
+            <Link
+              href="/waitlist"
+              className={`ml-2 flex h-[40px] shrink-0 items-center justify-center rounded-full px-5 text-[13px] font-semibold leading-none tracking-[-0.02em] shadow-[0_6px_18px_rgba(40,2,13,0.18)] transition-transform hover:scale-[1.02] ${
+                ctaIsDark ? "bg-ink text-cream" : "bg-cream text-ink"
+              }`}
+            >
+              Join
+            </Link>
+          </div>
+        </div>
+      </header>
+
+      {/* ───────── Desktop header ───────── */}
+      <header
+        className={`pointer-events-none fixed inset-x-0 top-0 z-50 hidden h-[158px] transition-opacity duration-300 md:block ${
+          visible ? "opacity-100" : "opacity-0"
+        }`}
+      >
+        <div className="relative mx-auto h-[158px] w-full max-w-[1920px]">
         <Link
           href="/"
           aria-label="Social Animal home"
@@ -119,10 +184,7 @@ export function Navbar() {
                     : "font-light opacity-80"
                 }`}
                 style={{
-                  color:
-                    active === "product" && link.id !== "problem"
-                      ? "#fae9da"
-                      : "#28020d",
+                  color: "#28020d",
                 }}
               >
                 {link.label}
@@ -140,6 +202,7 @@ export function Navbar() {
           </Link>
         </div>
       </div>
-    </header>
+      </header>
+    </>
   );
 }

@@ -1,4 +1,10 @@
+"use client";
+
 import Image from "next/image";
+import { useLayoutEffect, useRef, useState } from "react";
+import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { useIsMobile } from "@/lib/useIsMobile";
 
 /**
  * Problem section is a single continuous long canvas. In Figma this is
@@ -31,18 +37,27 @@ const w = (px: number) => `${(px / CANVAS_W) * 100}%`;
 const h = (px: number) => `${(px / CANVAS_H) * 100}%`;
 
 export function Problem() {
+  const isMobile = useIsMobile();
+  if (isMobile === null) {
+    // SSR / pre-measure: reserve the section id so anchor links + the
+    // navbar scroll-spy resolve before the variant mounts.
+    return <section id="importance" className="relative" />;
+  }
+  return isMobile ? <ProblemMobile /> : <ProblemDesktop />;
+}
+
+function ProblemDesktop() {
   return (
     <section
       id="importance"
       className="relative isolate overflow-hidden"
       style={{
-        backgroundImage:
-          "linear-gradient(240.66deg, #f5ebe2 0%, #ffe8d3 100%)",
+        backgroundImage: "linear-gradient(240.66deg, #f5ebe2 0%, #ffe8d3 100%)",
       }}
     >
       {/* Desktop: one long canvas, 1920×2280 aspect, anchored to max-1920 */}
       <div
-        className="relative hidden md:block mx-auto w-full max-w-[1920px]"
+        className="relative block mx-auto w-full max-w-[1920px]"
         style={{ aspectRatio: `${CANVAS_W} / ${CANVAS_H}` }}
       >
         <span
@@ -61,8 +76,8 @@ export function Problem() {
         <h2
           className="font-display absolute left-1/2 z-10 -translate-x-1/2 text-center text-plum"
           style={{
-            top: y(474),             // 540 - 66
-            width: w(926),           // 926/1920
+            top: y(474), // 540 - 66
+            width: w(926), // 926/1920
             fontSize: "clamp(2.5rem, 3.44vw, 4.125rem)",
             lineHeight: 1,
             letterSpacing: "-0.02em",
@@ -78,9 +93,9 @@ export function Problem() {
           style={{ left: x(143), top: y(631), width: w(529), height: h(358) }}
           quote="“When AI takes over more analytical and technical tasks, emotional intelligence becomes more important.”"
           quoteStyle={{
-            left: "12.1%",          // 64/529 of the card
-            top: "16.2%",           // 58/358 of the card
-            width: "79.4%",         // 420/529
+            left: "12.1%", // 64/529 of the card
+            top: "16.2%", // 58/358 of the card
+            width: "79.4%", // 420/529
             fontSize: 28,
             lineHeight: "32px",
           }}
@@ -89,8 +104,8 @@ export function Problem() {
           bylineStyle={{ left: "12.1%", top: "65.36%", width: "40.08%" }}
           avatar="/assets/avatar-nadella.png"
           avatarStyle={{
-            left: x(487),       // 507 - 20 (re-center after 120→160)
-            top: y(805),        // 825 - 20
+            left: x(487), // 507 - 20 (re-center after 120→160)
+            top: y(805), // 825 - 20
             objectPosition: "50% 25%",
           }}
         />
@@ -99,12 +114,17 @@ export function Problem() {
         <QuoteCard
           variant="blob"
           tone="pink"
-          style={{ left: x(1199), top: y(189), width: w(529), height: h(319.5) }}
+          style={{
+            left: x(1199),
+            top: y(189),
+            width: w(529),
+            height: h(319.5),
+          }}
           quote="“The most valuable skills in the AI age won’t be technical, they’ll be human.”"
           quoteStyle={{
             left: "12.1%",
-            top: "18.62%",           // 59.5/319.5
-            width: "70.9%",          // 375/529
+            top: "18.62%", // 59.5/319.5
+            width: "70.9%", // 375/529
             fontSize: 28,
             lineHeight: "32px",
             fontWeight: 500,
@@ -129,9 +149,9 @@ export function Problem() {
           quoteStyle={{
             left: "12.1%",
             top: "16.2%",
-            width: "78.45%",         // 415/529
+            width: "78.45%", // 415/529
             fontSize: 28,
-            lineHeight: "36px",      // NB: larger leading than the others
+            lineHeight: "36px", // NB: larger leading than the others
           }}
           name="Jamie Dimon,"
           title="CEO of JP Morgan Chase."
@@ -165,7 +185,7 @@ export function Problem() {
           className="absolute pointer-events-none"
           style={{
             left: x(114),
-            top: y(1358),            // 1200 + 158
+            top: y(1358), // 1200 + 158
             width: w(828.4),
             height: h(787.86),
           }}
@@ -187,10 +207,10 @@ export function Problem() {
         <div
           className="absolute pointer-events-none overflow-hidden"
           style={{
-            left: x(161.92),
-            top: y(1527),
-            width: w(717),
-            height: h(620),          // was 753 — crops 133px off the bottom
+            left: x(56), // shifted left to keep it centred at the larger size
+            top: y(1460),
+            width: w(947), // enlarged ~32% over the original 717 per feedback
+            height: h(820), // crops legs/feet off the bottom
           }}
         >
           <Image
@@ -203,17 +223,18 @@ export function Problem() {
           />
         </div>
 
-        {/* 557:736 — cream highlight rectangle for "watching"
-            Figma frame: (1457.7, 565.39, 324.484×76, rotate -2.65°)
-            Global Y: 1200 + 565.39 = 1765.39 */}
+        {/* 557:736 — cream highlight rectangle behind the word "watching".
+            Repositioned per feedback so it actually overlaps the word: the
+            heading wraps to "anybody watching." on the third line, so the
+            marker sits a touch left and higher to land under "watching". */}
         <div
           aria-hidden
           className="absolute"
           style={{
-            left: x(1457.7),
-            top: y(1765.39),
-            width: w(324.484),
-            height: h(76),
+            left: x(1485),
+            top: y(1776),
+            width: w(360),
+            height: h(72),
             background: "#fff8f3",
             transform: "rotate(-2.65deg)",
             transformOrigin: "center",
@@ -237,82 +258,141 @@ export function Problem() {
           <span className="font-sans font-semibold italic">watching</span>.
         </h2>
 
-        {/* 557:738 — body copy (1205, 2040, 568×120). Per user feedback,
-            pushed down from y=1903 → y=2040 (+137px figma ≈ +110 vp px at
-            1527 viewport) to add visible breathing room between the
-            headline and the paragraph at typical viewport widths. */}
+        {/* 557:738 — body copy. Pushed down from the original y=1903 to
+            y=1960 for breathing room under the headline — y=2040 (a prior
+            pass) was too far, this is the middle ground per feedback. */}
         <p
           className="absolute text-plum font-sans"
           style={{
             left: x(1205),
-            top: y(2040),
+            top: y(1960),
             width: w(568),
             fontSize: "clamp(1rem, 1.25vw, 1.5rem)",
             lineHeight: "30px",
             letterSpacing: "-0.02em",
           }}
         >
-          There are lots of videos and books to help boost your people
-          skills, but to actually improve you need to practice. And until
-          now, you could only do it in the very situations you wanted to
-          prepare for.
+          There are lots of videos and books to help boost your people skills,
+          but to actually improve you need to practice. And until now, you could
+          only do it in the very situations you wanted to prepare for.
         </p>
       </div>
 
-      {/* Mobile: stacked fallback */}
-      <div className="md:hidden px-6 pt-28 pb-24">
-        <h2 className="font-display text-center text-plum text-[clamp(2rem,8vw,2.75rem)] leading-[1.05] tracking-[-0.02em]">
-          People skills will be even more important going forward.
-        </h2>
-        <div className="mt-12 flex flex-col gap-8">
-          <MobileQuote
-            tone="green"
-            quote="“When AI takes over more analytical and technical tasks, emotional intelligence becomes more important.”"
-            name="Satya Nadella,"
-            title="CEO of Microsoft."
-            avatar="/assets/avatar-nadella.png"
-          />
-          <MobileQuote
-            tone="pink"
-            quote="“The most valuable skills in the AI age won’t be technical, they’ll be human.”"
-            name="Geoff Colvin,"
-            title="Expert on the future of work."
-            avatar="/assets/avatar-colvin.png"
-          />
-          <MobileQuote
-            tone="blue"
-            quote="”Soft skills like emotional intelligence and communication will be vital when AI eliminates many jobs.”"
-            name="Jamie Dimon,"
-            title="CEO of JP Morgan Chase."
-            avatar="/assets/avatar-dimon.png"
-          />
-        </div>
+    </section>
+  );
+}
 
-        <div className="mt-20 relative mx-auto flex h-[420px] w-full max-w-[480px] items-end justify-center rounded-[20px] bg-quote-blue overflow-hidden">
-          <img
-            src="/assets/hero-star-outline.svg"
-            alt=""
-            aria-hidden
-            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[85%] opacity-95"
-          />
-          <Image
-            src="/assets/problem-man.png"
-            alt=""
-            width={600}
-            height={628}
-            className="relative h-full w-auto object-contain object-bottom"
-            sizes="80vw"
-          />
+/* ───────────────────── Mobile (Figma mobile frames 241→243) ─────────────────
+   Two stacked scenes:
+   1. A sticky pinned stage: the big serif headline stays fixed dead-centre
+      while the three CEO quote cards drift upward as one group and pass
+      over/through it (matches Figma 241→242 motion).
+   2. Below it, the static "Improve your social ability … watching" block
+      above the full-width blue panel with star outline + man portrait. */
+function ProblemMobile() {
+  const flyRef = useRef<HTMLElement>(null);
+
+  useLayoutEffect(() => {
+    if (!flyRef.current) return;
+    gsap.registerPlugin(ScrollTrigger);
+
+    const ctx = gsap.context(() => {
+      // The cards group travels a full extra viewport upward across the
+      // 200vh runway, so they enter from below the fold and exit past the
+      // top, sweeping over the pinned headline.
+      gsap.fromTo(
+        ".pm-cards",
+        { yPercent: 30 },
+        {
+          yPercent: -120,
+          ease: "none",
+          scrollTrigger: {
+            trigger: flyRef.current!,
+            start: "top top",
+            end: "bottom bottom",
+            scrub: true,
+          },
+        },
+      );
+    }, flyRef);
+
+    return () => ctx.revert();
+  }, []);
+
+  return (
+    <section
+      id="importance"
+      className="relative isolate"
+      style={{
+        backgroundImage: "linear-gradient(240.66deg, #f5ebe2 0%, #ffe8d3 100%)",
+      }}
+    >
+      {/* Scene 1 — pinned headline + cards flying past (200vh runway) */}
+      <div ref={flyRef as React.RefObject<HTMLDivElement>} className="relative h-[200vh]">
+        <div className="sticky top-0 h-screen w-full overflow-hidden">
+          {/* Pinned headline — dead centre, never moves. Sits BELOW the
+              flying cards (cards are z-20) so they pass over it. */}
+          <h2
+            className="absolute left-1/2 top-1/2 z-0 w-[88%] max-w-[420px] -translate-x-1/2 -translate-y-1/2 text-center font-display text-plum"
+            style={{
+              fontSize: "clamp(2.25rem, 9vw, 3rem)",
+              lineHeight: 1.05,
+              letterSpacing: "-0.02em",
+              fontWeight: 500,
+            }}
+          >
+            People skills will be even more important going forward.
+          </h2>
+
+          {/* The three cards as one moving group. They start below the fold
+              and sweep up past the headline. Pink behind/above headline,
+              blue + green below, mirroring the Figma scatter. */}
+          {/* z-20 keeps the cards above the pinned headline as they sweep
+              past. Tops spaced ~52% apart so the three cards never overlap
+              each other (each card is ~30% of viewport tall). */}
+          <div className="pm-cards absolute inset-x-0 top-0 z-20 h-full">
+            <div className="absolute left-[5%] top-[2%] w-[78%] -rotate-[2deg]">
+              <MobileQuote
+                tone="pink"
+                quote="“The most valuable skills in the AI age won’t be technical, they’ll be human.”"
+                name="Geoff Colvin,"
+                title="Expert on the future of work."
+                avatar="/assets/avatar-colvin.png"
+              />
+            </div>
+            <div className="absolute right-[4%] top-[54%] w-[80%] rotate-[2deg]">
+              <MobileQuote
+                tone="blue"
+                quote="”Soft skills like emotional intelligence and communication will be vital when AI eliminates many jobs.”"
+                name="Jamie Dimon,"
+                title="CEO of JP Morgan Chase."
+                avatar="/assets/avatar-dimon.png"
+              />
+            </div>
+            <div className="absolute left-[6%] top-[106%] w-[78%] -rotate-[2deg]">
+              <MobileQuote
+                tone="green"
+                quote="“When AI takes over more analytical and technical tasks, emotional intelligence becomes more important.”"
+                name="Satya Nadella,"
+                title="CEO of Microsoft."
+                avatar="/assets/avatar-nadella.png"
+              />
+            </div>
+          </div>
         </div>
-        <h2 className="mt-10 font-display text-plum text-[clamp(2rem,8vw,2.75rem)] leading-[1.12] tracking-[-0.02em]">
+      </div>
+
+      {/* Scene 2 — "Improve your social ability …" + blue panel (static) */}
+      <div className="px-5 pb-20 pt-10">
+        <h2 className="font-display text-center text-plum text-[clamp(2rem,8.5vw,3rem)] leading-[1.1] tracking-[-0.02em]">
           Improve your social ability without anybody{" "}
           <span className="relative inline-block">
             <span
               aria-hidden
-              className="absolute inset-x-0 -z-10"
+              className="absolute inset-x-[-4px] -z-10"
               style={{
-                top: "32%",
-                bottom: "6%",
+                top: "30%",
+                bottom: "8%",
                 background: "#fff8f3",
                 transform: "rotate(-2.65deg)",
               }}
@@ -321,12 +401,28 @@ export function Problem() {
           </span>
           .
         </h2>
-        <p className="mt-6 text-plum text-[clamp(1rem,4vw,1.25rem)] leading-[1.35] tracking-[-0.02em]">
-          There are lots of videos and books to help boost your people
-          skills, but to actually improve you need to practice. And until
-          now, you could only do it in the very situations you wanted to
-          prepare for.
+        <p className="mx-auto mt-5 max-w-[440px] text-center text-plum text-[clamp(0.95rem,4vw,1.2rem)] leading-[1.4] tracking-[-0.02em]">
+          There are lots of videos and books to help boost your people skills,
+          but to actually improve you need to practice. And until now, you could
+          only do it in the very situations you wanted to prepare for.
         </p>
+
+        <div className="mt-10 relative mx-auto flex aspect-[3/4] w-full items-end justify-center overflow-hidden rounded-[20px] bg-quote-blue">
+          <img
+            src="/assets/hero-star-outline.svg"
+            alt=""
+            aria-hidden
+            className="absolute left-1/2 top-[46%] w-[88%] -translate-x-1/2 -translate-y-1/2 opacity-95"
+          />
+          <Image
+            src="/assets/problem-man.png"
+            alt=""
+            width={600}
+            height={628}
+            className="relative h-[94%] w-auto object-contain object-bottom"
+            sizes="90vw"
+          />
+        </div>
       </div>
     </section>
   );
@@ -352,11 +448,24 @@ interface QuoteCardProps {
   };
 }
 
-const TONE: Record<Tone, { bg: string; quoteInk: string; bylineInk: string }> = {
-  green: { bg: "bg-quote-green", quoteInk: "text-quote-green-ink", bylineInk: "text-quote-green-ink" },
-  pink:  { bg: "bg-quote-pink",  quoteInk: "text-quote-pink-ink",  bylineInk: "text-quote-pink-ink" },
-  blue:  { bg: "bg-quote-blue",  quoteInk: "text-quote-blue-ink",  bylineInk: "text-quote-blue-ink" },
-};
+const TONE: Record<Tone, { bg: string; quoteInk: string; bylineInk: string }> =
+  {
+    green: {
+      bg: "bg-quote-green",
+      quoteInk: "text-quote-green-ink",
+      bylineInk: "text-quote-green-ink",
+    },
+    pink: {
+      bg: "bg-quote-pink",
+      quoteInk: "text-quote-pink-ink",
+      bylineInk: "text-quote-pink-ink",
+    },
+    blue: {
+      bg: "bg-quote-blue",
+      quoteInk: "text-quote-blue-ink",
+      bylineInk: "text-quote-blue-ink",
+    },
+  };
 
 function QuoteCard({
   variant,
@@ -373,15 +482,17 @@ function QuoteCard({
   const { bg, quoteInk, bylineInk } = TONE[tone];
   const { withBackdrop, objectPosition, ...avatarPos } = avatarStyle;
 
-  const quoteFontSize = typeof quoteStyle.fontSize === "number"
-    ? `clamp(0.95rem, ${(quoteStyle.fontSize / CANVAS_W) * 100}vw, ${quoteStyle.fontSize / 16}rem)`
-    : quoteStyle.fontSize;
+  const quoteFontSize =
+    typeof quoteStyle.fontSize === "number"
+      ? `clamp(0.95rem, ${(quoteStyle.fontSize / CANVAS_W) * 100}vw, ${quoteStyle.fontSize / 16}rem)`
+      : quoteStyle.fontSize;
 
-  const quoteLineHeight = typeof quoteStyle.lineHeight === "string"
-    && quoteStyle.lineHeight.endsWith("px")
-    && typeof quoteStyle.fontSize === "number"
-    ? `${Number(quoteStyle.lineHeight.replace("px", "")) / quoteStyle.fontSize}`
-    : quoteStyle.lineHeight;
+  const quoteLineHeight =
+    typeof quoteStyle.lineHeight === "string" &&
+    quoteStyle.lineHeight.endsWith("px") &&
+    typeof quoteStyle.fontSize === "number"
+      ? `${Number(quoteStyle.lineHeight.replace("px", "")) / quoteStyle.fontSize}`
+      : quoteStyle.lineHeight;
 
   return (
     <>
@@ -419,8 +530,7 @@ function QuoteCard({
             lineHeight: "20px",
           }}
         >
-          -{" "}
-          <span className="font-medium not-italic">{name}</span>
+          - <span className="font-medium not-italic">{name}</span>
           <br />
           <span className="font-light ml-2">{title}</span>
         </p>
@@ -436,7 +546,10 @@ function QuoteCard({
         }}
       >
         {withBackdrop && (
-          <div aria-hidden className="absolute inset-0 bg-[#e9ebed] rounded-full" />
+          <div
+            aria-hidden
+            className="absolute inset-0 bg-[#e9ebed] rounded-full"
+          />
         )}
         <Image
           src={avatar}
@@ -464,7 +577,9 @@ interface MobileQuoteProps {
 function MobileQuote({ tone, quote, name, title, avatar }: MobileQuoteProps) {
   const { bg, quoteInk } = TONE[tone];
   return (
-    <div className={`relative rounded-[35px] rounded-br-[90px] p-7 ${bg} ${quoteInk}`}>
+    <div
+      className={`relative rounded-[35px] rounded-br-[90px] p-7 ${bg} ${quoteInk}`}
+    >
       <p className="font-sans italic text-[clamp(1rem,4.5vw,1.25rem)] leading-[1.3] tracking-[-0.02em]">
         {quote}
       </p>

@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useLayoutEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { useIsMobile } from "@/lib/useIsMobile";
 
 /**
  * Product cinematic — Figma frames 71 (intro) → 66 → 67 → 68 → 69 (steps 01–04).
@@ -25,6 +26,20 @@ const CANVAS_H = 1080;
 // Total frames: intro (0) + 4 steps (1..4). Each frame gets one viewport of
 // scroll runway, so the section reserves 5vh of layout.
 const TOTAL_FRAMES = 5; // 0..4
+
+// Mobile portrait canvas (Figma mobile frames 244→247, 1080×1920).
+// Measured from the design:
+//  • dark laptop panel flat top  ≈ y 1072/1920 (55.8%) — bottom ~44%
+//  • green finale panel top      ≈ y  968/1920 (50.4%) — bottom ~50%
+//  • panel rounded top radius    ≈ 60/1080 of the canvas width
+const M_W = 1080;
+const M_H = 1920;
+const DARK_PANEL_TOP = `${(1072 / M_H) * 100}%`; // ≈ 55.8%
+const GREEN_PANEL_TOP = `${(968 / M_H) * 100}%`; // ≈ 50.4%
+const PANEL_RADIUS = `${(60 / M_W) * 100}vw`; // ≈ 5.5vw, matches Figma 60px
+// Cream text area ends where the higher of the two panels begins, so text
+// never collides with either scene.
+const TEXT_BOTTOM = GREEN_PANEL_TOP;
 
 interface Step {
   number: string;
@@ -79,6 +94,21 @@ const STEPS: Step[] = [
 ];
 
 export function Product() {
+  const isMobile = useIsMobile();
+
+  if (isMobile === null) {
+    return (
+      <section
+        id="product"
+        className="relative w-full"
+        style={{ height: `${TOTAL_FRAMES * 100}vh` }}
+      />
+    );
+  }
+  return isMobile ? <ProductMobile /> : <ProductDesktop />;
+}
+
+function ProductDesktop() {
   const sectionRef = useRef<HTMLElement>(null);
   const [activeFrame, setActiveFrame] = useState(0);
 
@@ -156,6 +186,301 @@ export function Product() {
               <StepPane step={step} stepIndex={i} />
             </div>
           ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ───────── Mobile Product (Figma mobile frames 244→247) ─────────
+   Same 5-frame scroll-driven sequence as desktop, reflowed vertically:
+   text/number/progress in the cream area on top, the scene image in a
+   full-width panel below. ← → arrows + progress dots mirror the design;
+   they also let users step frames without scrolling. */
+function ProductMobile() {
+  const sectionRef = useRef<HTMLElement>(null);
+  const [activeFrame, setActiveFrame] = useState(0);
+
+  useLayoutEffect(() => {
+    if (!sectionRef.current) return;
+    gsap.registerPlugin(ScrollTrigger);
+
+    const trigger = ScrollTrigger.create({
+      trigger: sectionRef.current,
+      start: "top top",
+      end: "bottom bottom",
+      onUpdate: (self) => {
+        const frame = Math.min(
+          TOTAL_FRAMES - 1,
+          Math.floor(self.progress * TOTAL_FRAMES),
+        );
+        setActiveFrame(frame);
+      },
+    });
+    return () => trigger.kill();
+  }, []);
+
+  // Tapping an arrow scrolls to the middle of that frame's runway so the
+  // ScrollTrigger lands cleanly on it.
+  const goToFrame = (frame: number) => {
+    const el = sectionRef.current;
+    if (!el) return;
+    const clamped = Math.max(0, Math.min(TOTAL_FRAMES - 1, frame));
+    const top = el.offsetTop;
+    const runway = el.offsetHeight - window.innerHeight;
+    window.scrollTo({
+      top: top + (runway * (clamped + 0.5)) / TOTAL_FRAMES,
+      behavior: "smooth",
+    });
+  };
+
+  const isIntro = activeFrame === 0;
+  const step = isIntro ? null : STEPS[activeFrame - 1];
+
+  return (
+    <section
+      ref={sectionRef}
+      id="product"
+      className="relative w-full"
+      style={{ height: `${TOTAL_FRAMES * 100}vh` }}
+    >
+      <div
+        className="sticky top-0 h-screen w-screen overflow-hidden"
+        style={{
+          backgroundImage:
+            "linear-gradient(240.66deg, #f5ebe2 0%, #ffe8d3 99.99%)",
+        }}
+      >
+        {/* Fixed 1080×1920 portrait canvas so every element keeps its exact
+            Figma ratio at any viewport (Frame 246). The cream text area is
+            the top ~51%; the scene panel is the bottom ~49% with a 60px
+            rounded top, exactly per the design. */}
+        <div
+          className="absolute left-1/2 top-0 -translate-x-1/2"
+          style={{
+            height: "100vh",
+            aspectRatio: `${M_W} / ${M_H}`,
+            maxWidth: "100vw",
+          }}
+        >
+          {/* ── Scene panel ──
+              Geometry measured from Figma Frames 244–247 (1080×1920):
+              • Dark laptop panel: flat top at y≈1072/1920 (55.8%), bottom
+                44%, rounded top ≈60/1080 of width. The 3840×2160 source PNG
+                has ~26% empty transparent top, so object-cover object-bottom
+                fills the panel width with the laptop large and bottom-bled,
+                cropping only the empty top — no vertical over-stretch (which
+                was the blur source).
+              • Green finale: separate, shallower panel — top at y≈968 (50.4%),
+                small 20px radius, nearly square; the person stays INSIDE the
+                panel (does not bleed into the cream), large and centred on
+                the star, bottom-cropped. */}
+          <div className="absolute inset-0">
+            {/* Intro + dark steps */}
+            <div
+              className={`absolute inset-x-0 bottom-0 overflow-hidden transition-opacity duration-300 ${
+                isIntro || step?.variant === "dark-scene"
+                  ? "opacity-100"
+                  : "opacity-0"
+              }`}
+              style={{
+                top: DARK_PANEL_TOP,
+                borderTopLeftRadius: PANEL_RADIUS,
+                borderTopRightRadius: PANEL_RADIUS,
+              }}
+            >
+              <div
+                className="absolute inset-0"
+                style={{
+                  backgroundImage:
+                    "linear-gradient(222.25deg, #200009 15.351%, #28020d 84.649%)",
+                }}
+              />
+              <div className="absolute inset-0 mix-blend-multiply opacity-25">
+                <Image
+                  src="/assets/hero-texture.png"
+                  alt=""
+                  fill
+                  className="object-cover"
+                  sizes="100vw"
+                />
+              </div>
+              <Image
+                key={isIntro ? "intro" : step?.sceneSrc}
+                src={
+                  isIntro
+                    ? "/assets/product-scene-intro.png"
+                    : (step?.sceneSrc ?? "/assets/product-scene-intro.png")
+                }
+                alt=""
+                fill
+                className="object-cover object-bottom"
+                sizes="100vw"
+                quality={95}
+              />
+              {!isIntro && step?.overlaySrc && (
+                <Image
+                  src={step.overlaySrc}
+                  alt=""
+                  fill
+                  className="object-cover object-bottom"
+                  sizes="100vw"
+                  quality={95}
+                />
+              )}
+            </div>
+
+            {/* Green finale (step 04) */}
+            <div
+              className={`absolute inset-x-0 bottom-0 overflow-hidden rounded-[20px] bg-quote-green transition-opacity duration-300 ${
+                step?.variant === "green-finale" ? "opacity-100" : "opacity-0"
+              }`}
+              style={{ top: GREEN_PANEL_TOP }}
+            >
+              <img
+                src="/assets/product-step-04-star.svg"
+                alt=""
+                aria-hidden
+                className="absolute left-1/2 top-1/2 w-[86%] -translate-x-1/2 -translate-y-1/2"
+              />
+              <div className="absolute inset-x-0 bottom-0 top-[10%] flex items-end justify-center">
+                <Image
+                  src="/assets/product-step-04-person.png"
+                  alt=""
+                  width={1251}
+                  height={1251}
+                  className="h-full w-auto max-w-none object-contain object-bottom"
+                  sizes="100vw"
+                  quality={95}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* ── Cream text area (top ~51%) ──
+              Content is vertically centred between the fixed navbar and the
+              divider so it never gets pushed off the top, regardless of how
+              long the step copy is (step 3 is the longest). */}
+          <div
+            className="absolute inset-x-0 top-0 flex flex-col items-center justify-center px-6 text-center"
+            style={{
+              bottom: `calc(100% - ${TEXT_BOTTOM})`,
+              paddingTop: "104px", // clear the fixed 88px mobile navbar
+              paddingBottom: "84px", // leave room for the pinned arrows row
+            }}
+          >
+            {isIntro ? (
+              <>
+                <h2
+                  className="font-display"
+                  style={{
+                    color: "#50091e",
+                    fontSize: "clamp(2.25rem, 9vw, 3rem)",
+                    lineHeight: 1.05,
+                    letterSpacing: "-0.02em",
+                    fontWeight: 500,
+                  }}
+                >
+                  Introducing
+                  <br />
+                  <span className="font-sans font-semibold italic">
+                    Social Animal
+                  </span>
+                </h2>
+                <p
+                  className="mt-5 max-w-[460px] font-sans"
+                  style={{
+                    color: "#50091e",
+                    fontSize: "clamp(0.95rem, 4vw, 1.2rem)",
+                    lineHeight: 1.35,
+                    letterSpacing: "-0.02em",
+                  }}
+                >
+                  Social Animal is an AI-powered tool that lets you practice,
+                  improve and gain confidence on your own.
+                </p>
+                <div
+                  className="mt-7 flex items-center gap-2 rounded-full border border-plum/40 px-6 py-3 font-sans"
+                  style={{
+                    color: "#50091e",
+                    fontSize: "clamp(0.9rem, 3.6vw, 1.05rem)",
+                    letterSpacing: "-0.02em",
+                  }}
+                >
+                  See how it works <span aria-hidden>→</span>
+                </div>
+              </>
+            ) : (
+              <>
+                <p
+                  className="font-sans font-semibold"
+                  style={{
+                    color: "#50091e",
+                    fontSize: "clamp(1.75rem, 7.5vw, 2.375rem)",
+                    lineHeight: 1.1,
+                    letterSpacing: "-0.02em",
+                  }}
+                >
+                  {step?.number === "01"
+                    ? "Describe"
+                    : step?.number === "02"
+                      ? "Practice"
+                      : step?.number === "03"
+                        ? "Get feedback"
+                        : "Track progress"}
+                </p>
+                <p
+                  className="mt-4 max-w-[480px] font-sans"
+                  style={{
+                    color: "#50091e",
+                    fontSize: "clamp(1.05rem, 4.8vw, 1.4rem)",
+                    lineHeight: 1.3,
+                    letterSpacing: "-0.02em",
+                  }}
+                >
+                  {step?.description}
+                </p>
+              </>
+            )}
+
+            {/* arrows + progress dots — pinned just above the divider */}
+            {!isIntro && (
+              <div className="absolute inset-x-6 bottom-[6%] flex items-center justify-between">
+                <button
+                  type="button"
+                  aria-label="Previous step"
+                  onClick={() => goToFrame(activeFrame - 1)}
+                  className="flex h-[52px] w-[52px] items-center justify-center rounded-full bg-ink text-cream transition-transform active:scale-95"
+                >
+                  ←
+                </button>
+                <div className="flex items-center gap-2">
+                  {STEPS.map((_, i) => (
+                    <span
+                      key={i}
+                      className="rounded-full transition-all duration-200"
+                      style={{
+                        width: i === activeFrame - 1 ? 24 : 8,
+                        height: 8,
+                        background:
+                          i === activeFrame - 1
+                            ? "#50091e"
+                            : "rgba(80,9,30,0.3)",
+                      }}
+                    />
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  aria-label="Next step"
+                  onClick={() => goToFrame(activeFrame + 1)}
+                  className="flex h-[52px] w-[52px] items-center justify-center rounded-full bg-ink text-cream transition-transform active:scale-95"
+                >
+                  →
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </section>

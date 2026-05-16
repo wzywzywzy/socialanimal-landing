@@ -23,8 +23,96 @@ export function Purpose() {
         backgroundImage: "linear-gradient(240.66deg, #f5ebe2 0%, #ffe8d3 99.99%)",
       }}
     >
+      {/* ───────── Mobile (Figma mobile frames 249→250) ─────────
+          Pink panel with centred heading + body, then the dark waitlist
+          CTA footer. */}
+      <div className="md:hidden">
+        <div className="bg-purpose-pink px-7 pb-24 pt-24 text-center">
+          <h2
+            className="font-display"
+            style={{
+              color: "#644b62",
+              fontSize: "clamp(2.25rem, 9vw, 3rem)",
+              lineHeight: 1.1,
+              letterSpacing: "-0.02em",
+              fontWeight: 500,
+            }}
+          >
+            <span className="font-sans font-semibold italic">Why</span> we’re
+            building Social Animal
+          </h2>
+          <p
+            className="mx-auto mt-7 max-w-[460px] font-sans"
+            style={{
+              color: "#644b62",
+              fontSize: "clamp(0.95rem, 4vw, 1.2rem)",
+              lineHeight: 1.4,
+              letterSpacing: "-0.02em",
+            }}
+          >
+            Social ability is more important than ever. And it’s not true that
+            “some people have it and some do not”. People skills can be learned.
+            And we’re on a mission to build the world’s first great training
+            tool. We’re here for everyone who’s ever felt awkward, shy, or under
+            appreciated.
+          </p>
+        </div>
+
+        <div
+          className="relative overflow-hidden px-7 pb-24 pt-24 text-center"
+          style={{
+            backgroundImage:
+              "linear-gradient(198.35deg, #200009 15%, #28020d 85%)",
+          }}
+        >
+          <div
+            aria-hidden
+            className="absolute inset-0 mix-blend-multiply opacity-25 pointer-events-none"
+          >
+            <Image
+              src="/assets/purpose-footer-texture.png"
+              alt=""
+              fill
+              className="object-cover"
+              sizes="100vw"
+            />
+          </div>
+          <div aria-hidden className="absolute inset-0 pointer-events-none">
+            <img
+              src="/assets/purpose-footer-mask.svg"
+              alt=""
+              className="h-full w-full object-cover"
+            />
+          </div>
+
+          <p
+            className="relative font-display text-cream"
+            style={{
+              fontSize: "clamp(1.5rem, 7vw, 2.25rem)",
+              lineHeight: 1.25,
+              letterSpacing: "-0.02em",
+              fontWeight: 300,
+            }}
+          >
+            Want to be among the first to try it?
+            <br />
+            Sign up for the waitlist here
+          </p>
+          <Link
+            href="/waitlist"
+            className="relative mt-10 inline-flex h-[60px] items-center justify-center rounded-full bg-cream px-10 font-sans font-semibold text-ink transition-transform hover:scale-[1.03]"
+            style={{
+              fontSize: "clamp(1rem, 4.4vw, 1.3rem)",
+              letterSpacing: "-0.02em",
+            }}
+          >
+            Join Waitlist
+          </Link>
+        </div>
+      </div>
+
       <div
-        className="relative mx-auto w-full max-w-[1920px]"
+        className="relative mx-auto hidden w-full max-w-[1920px] md:block"
         style={{ aspectRatio: `${CANVAS_W} / ${CANVAS_H}` }}
       >
         {/* Pink ellipse decorative bg — Frame 73 at (0, 252, 1920×828). */}
