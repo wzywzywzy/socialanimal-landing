@@ -136,6 +136,19 @@ function ProductDesktop() {
     return () => trigger.kill();
   }, []);
 
+  // Scroll to the middle of a given frame's runway so the ScrollTrigger lands
+  // cleanly on it (shared by the ← → arrow buttons under each step).
+  const goToFrame = (frame: number) => {
+    const el = sectionRef.current;
+    if (!el) return;
+    const clamped = Math.max(0, Math.min(TOTAL_FRAMES - 1, frame));
+    const runway = el.offsetHeight - window.innerHeight;
+    window.scrollTo({
+      top: el.offsetTop + (runway * (clamped + 0.5)) / TOTAL_FRAMES,
+      behavior: "smooth",
+    });
+  };
+
   return (
     <section
       ref={sectionRef}
@@ -172,20 +185,32 @@ function ProductDesktop() {
             <IntroPane />
           </div>
 
-          {/* Step panes — one visible at a time via opacity. */}
-          {STEPS.map((step, i) => (
-            <div
-              key={i}
-              className={`product-step-${i} absolute inset-0 pointer-events-none transition-opacity ease-out ${
-                activeFrame === i + 1
-                  ? "opacity-100 duration-200"
-                  : "opacity-0 duration-150"
-              }`}
-              style={{ transform: "translateZ(0)", willChange: "opacity" }}
-            >
-              <StepPane step={step} stepIndex={i} />
-            </div>
-          ))}
+          {/* Step panes — one visible at a time via opacity. The wrapper
+              flips between pointer-events-none (inactive) and -auto (active)
+              so only the visible step's ← → buttons receive clicks. */}
+          {STEPS.map((step, i) => {
+            const isActive = activeFrame === i + 1;
+            return (
+              <div
+                key={i}
+                className={`product-step-${i} absolute inset-0 transition-opacity ease-out ${
+                  isActive
+                    ? "opacity-100 duration-200 pointer-events-auto"
+                    : "opacity-0 duration-150 pointer-events-none"
+                }`}
+                style={{ transform: "translateZ(0)", willChange: "opacity" }}
+              >
+                <StepPane
+                  step={step}
+                  stepIndex={i}
+                  onPrev={() => goToFrame(i)} // frame index = stepIndex (i+1) - 1
+                  onNext={() => goToFrame(i + 2)}
+                  canPrev={i > 0}
+                  canNext={i < STEPS.length - 1}
+                />
+              </div>
+            );
+          })}
         </div>
       </div>
     </section>
@@ -200,6 +225,12 @@ function ProductDesktop() {
 function ProductMobile() {
   const sectionRef = useRef<HTMLElement>(null);
   const [activeFrame, setActiveFrame] = useState(0);
+  // Cache the most recent dark-scene step (01/02/03) so when we transition
+  // into the green-finale (04) the dark layer keeps showing step 03 as it
+  // fades out, instead of falling back to the intro image — that fallback
+  // was producing a brief "third image" flash during 03→04. Desktop is fine
+  // because each step has its own absolutely-positioned scene element.
+  const lastDarkStepRef = useRef<Step | null>(null);
 
   useLayoutEffect(() => {
     if (!sectionRef.current) return;
@@ -236,6 +267,25 @@ function ProductMobile() {
 
   const isIntro = activeFrame === 0;
   const step = isIntro ? null : STEPS[activeFrame - 1];
+
+  // Keep the cached dark step in sync while the user is on a dark-scene step.
+  // When activeFrame moves to the finale (step 04) we deliberately do NOT
+  // overwrite the cache, so the dark layer keeps rendering step 03 as it
+  // fades out underneath the finale.
+  if (step?.variant === "dark-scene") {
+    lastDarkStepRef.current = step;
+  }
+  // What the dark layer should show right now. While on intro: the intro
+  // image; on a dark step: that step; on the finale: the last dark step
+  // we visited (or intro as a hard fallback before any dark step exists).
+  const darkLayerScene = isIntro
+    ? { src: "/assets/product-scene-intro.png", overlay: undefined as string | undefined }
+    : step?.variant === "dark-scene"
+      ? { src: step.sceneSrc!, overlay: step.overlaySrc }
+      : {
+          src: lastDarkStepRef.current?.sceneSrc ?? "/assets/product-scene-intro.png",
+          overlay: lastDarkStepRef.current?.overlaySrc,
+        };
 
   return (
     <section
@@ -306,21 +356,17 @@ function ProductMobile() {
                 />
               </div>
               <Image
-                key={isIntro ? "intro" : step?.sceneSrc}
-                src={
-                  isIntro
-                    ? "/assets/product-scene-intro.png"
-                    : (step?.sceneSrc ?? "/assets/product-scene-intro.png")
-                }
+                key={darkLayerScene.src}
+                src={darkLayerScene.src}
                 alt=""
                 fill
                 className="object-cover object-bottom"
                 sizes="100vw"
                 quality={95}
               />
-              {!isIntro && step?.overlaySrc && (
+              {darkLayerScene.overlay && (
                 <Image
-                  src={step.overlaySrc}
+                  src={darkLayerScene.overlay}
                   alt=""
                   fill
                   className="object-cover object-bottom"
@@ -396,11 +442,13 @@ function ProductMobile() {
                     letterSpacing: "-0.02em",
                   }}
                 >
-                  Social Animal is an AI-powered tool that lets you practice,
-                  improve and gain confidence on your own.
+                  Social Animal is an app that lets you practice and improve
+                  your social skills on your own.
                 </p>
-                <div
-                  className="mt-7 flex items-center gap-2 rounded-full border border-plum/40 px-6 py-3 font-sans"
+                <button
+                  type="button"
+                  onClick={() => goToFrame(1)}
+                  className="mt-7 inline-flex items-center gap-2 rounded-full border border-plum/40 px-6 py-3 font-sans transition-colors active:bg-plum/10"
                   style={{
                     color: "#50091e",
                     fontSize: "clamp(0.9rem, 3.6vw, 1.05rem)",
@@ -408,7 +456,7 @@ function ProductMobile() {
                   }}
                 >
                   See how it works <span aria-hidden>→</span>
-                </div>
+                </button>
               </>
             ) : (
               <>
@@ -587,9 +635,36 @@ function IntroPane() {
           margin: 0,
         }}
       >
-        Social Animal is an AI-powered tool that lets you practice, improve and
-        gain confidence on your own.
+        Social Animal is an app that lets you practice and improve your social
+        skills on your own.
       </p>
+
+      {/* "See how it works" CTA — clicking jumps to step 01 (Frame 66) by
+          scrolling into the first runway of the Product section. */}
+      <button
+        type="button"
+        onClick={() => {
+          const section = document.getElementById("product");
+          if (!section) return;
+          const runway = section.offsetHeight - window.innerHeight;
+          window.scrollTo({
+            top: section.offsetTop + (runway * 1.5) / TOTAL_FRAMES,
+            behavior: "smooth",
+          });
+        }}
+        className="absolute font-sans pointer-events-auto inline-flex items-center gap-3 rounded-full border border-plum/40 transition-colors hover:bg-plum/10"
+        style={{
+          left: pct(151, CANVAS_W),
+          top: pct(720, CANVAS_H),
+          paddingInline: pct(28, CANVAS_W),
+          paddingBlock: pct(14, CANVAS_H),
+          color: "#50091e",
+          fontSize: "clamp(0.95rem, 1.05vw, 1.25rem)",
+          letterSpacing: "-0.02em",
+        }}
+      >
+        See how it works <span aria-hidden>→</span>
+      </button>
     </>
   );
 }
@@ -620,9 +695,20 @@ function IntroScene() {
 interface StepPaneProps {
   step: Step;
   stepIndex: number;
+  onPrev: () => void;
+  onNext: () => void;
+  canPrev: boolean;
+  canNext: boolean;
 }
 
-function StepPane({ step, stepIndex }: StepPaneProps) {
+function StepPane({
+  step,
+  stepIndex,
+  onPrev,
+  onNext,
+  canPrev,
+  canNext,
+}: StepPaneProps) {
   const isFinale = step.variant === "green-finale";
 
   return (
@@ -662,7 +748,98 @@ function StepPane({ step, stepIndex }: StepPaneProps) {
       </p>
 
       <ProgressIndicator activeIndex={stepIndex} />
+
+      <StepNav
+        onPrev={onPrev}
+        onNext={onNext}
+        canPrev={canPrev}
+        canNext={canNext}
+      />
     </>
+  );
+}
+
+/* ── ← → arrow buttons under the step copy on the left half.
+   Per feedback round 3:
+     • Buttons spaced further apart (was too cramped).
+     • On the first step the ← button is hidden entirely (was disabled but
+       still rendered, which looked dead and confusing). Same for the →
+       button on the last step.
+   They live inside the StepPane, so they fade in/out together with the
+   step's right-hand scene image automatically. */
+function StepNav({
+  onPrev,
+  onNext,
+  canPrev,
+  canNext,
+}: {
+  onPrev: () => void;
+  onNext: () => void;
+  canPrev: boolean;
+  canNext: boolean;
+}) {
+  const btnSize = 64; // px on the 1920×1080 canvas
+  const btnClass =
+    "flex aspect-square h-full items-center justify-center rounded-full bg-plum text-cream transition-transform hover:scale-105";
+
+  return (
+    <div
+      className="absolute flex items-center"
+      style={{
+        left: pct(166, CANVAS_W),
+        top: pct(870, CANVAS_H),
+        // Wide-enough container so the two buttons sit comfortably apart
+        // (justify-between pins them to the two ends).
+        width: pct(280, CANVAS_W),
+        height: pct(btnSize, CANVAS_H),
+        justifyContent: "space-between",
+      }}
+    >
+      {canPrev ? (
+        <button
+          type="button"
+          aria-label="Previous step"
+          onClick={onPrev}
+          className={btnClass}
+        >
+          <svg width="40%" height="40%" viewBox="0 0 24 24" fill="none" aria-hidden>
+            <path
+              d="M14 6l-6 6 6 6"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </button>
+      ) : (
+        // Placeholder keeps the right-hand button anchored to the same
+        // position whether or not the left button exists, so layout
+        // doesn't shift between steps.
+        <span aria-hidden style={{ width: pct(btnSize, CANVAS_W) }} />
+      )}
+
+      {canNext ? (
+        <button
+          type="button"
+          aria-label="Next step"
+          onClick={onNext}
+          className={btnClass}
+        >
+          <svg width="40%" height="40%" viewBox="0 0 24 24" fill="none" aria-hidden>
+            <path
+              d="M10 6l6 6-6 6"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </button>
+      ) : (
+        <span aria-hidden style={{ width: pct(btnSize, CANVAS_W) }} />
+      )}
+    </div>
   );
 }
 

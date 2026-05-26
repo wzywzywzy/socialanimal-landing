@@ -26,10 +26,6 @@ import { useIsMobile } from "@/lib/useIsMobile";
 const CANVAS_W = 1920;
 const CANVAS_H = 1080;
 
-// Mobile portrait canvas (Figma mobile frames 686:825 → 686:891, 1080×1920).
-const M_W = 1080;
-const M_H = 1920;
-
 export function Hero() {
   const isMobile = useIsMobile();
 
@@ -297,319 +293,140 @@ function HeroDesktop() {
   );
 }
 
-/* ───────── Mobile Hero (portrait cinematic) ─────────
-   Mirrors the desktop 2-segment scrub timeline on a 1080×1920 portrait
-   canvas, matching Figma mobile frames 237→241:
-     237  logo splash on the dark wine bg
-     238  logo top, title + subtitle centred (no phone)
-     239  phone mock rises from bottom + CTA fades in
-     240  phone scales in closer, title/subtitle fade up
-     241  hands off to Problem (navbar appears)
-*/
+/* ───────── Mobile Hero (portrait, single static frame) ─────────
+   Per feedback round #2:
+     1. The dark "logo splash" first frame was confusing and has been
+        removed — the hero now opens directly with the title + subtitle +
+        phone visible.
+     2. The waitlist CTA copy + Join Waitlist button is included in this
+        same frame (was previously revealed by a second scroll segment).
+   The whole hero now lives in a single viewport, no scroll runway. */
 function HeroMobile() {
-  const sectionRef = useRef<HTMLElement>(null);
-  const stageRef = useRef<HTMLDivElement>(null);
-
-  useLayoutEffect(() => {
-    if (!sectionRef.current || !stageRef.current) return;
-
-    gsap.registerPlugin(ScrollTrigger, CustomEase);
-    CustomEase.create("figmaSmartM", "M0,0 C0.43,-0.01 0.14,1 1,1");
-
-    const ctx = gsap.context(() => {
-      const vh = (px: number) => `${(px / M_H) * 100}vh`;
-
-      const tl = gsap.timeline({
-        scrollTrigger: {
-          trigger: sectionRef.current!,
-          start: "top top",
-          end: "bottom bottom",
-          scrub: true,
-        },
-      });
-
-      // Segment 1 (0→1): logo splash settles to top; title + subtitle
-      // fade/slide up into place; phone rises from below; CTA appears.
-      tl.fromTo(
-        ".m-hero-logo",
-        { y: vh(620), scale: 1.35 },
-        { y: 0, scale: 1, duration: 1, ease: "figmaSmartM" },
-        0,
-      )
-        .fromTo(
-          ".m-hero-title",
-          { opacity: 0, y: vh(120) },
-          { opacity: 1, y: 0, duration: 1, ease: "figmaSmartM" },
-          0.15,
-        )
-        .fromTo(
-          ".m-hero-subtitle",
-          { opacity: 0, y: vh(120) },
-          { opacity: 1, y: 0, duration: 1, ease: "figmaSmartM" },
-          0.25,
-        )
-        .fromTo(
-          ".m-hero-phone",
-          { opacity: 0, y: vh(560) },
-          { opacity: 1, y: vh(120), duration: 1, ease: "figmaSmartM" },
-          0.2,
-        )
-        .fromTo(
-          ".m-hero-cta",
-          { opacity: 0 },
-          { opacity: 1, duration: 0.6, ease: "figmaSmartM" },
-          0.6,
-        );
-
-      // Segment 2 (1→2): title/subtitle lift away, phone slides up closer
-      // to fill the frame before handing off to Problem.
-      tl.to(".m-hero-title", { opacity: 0, y: vh(-260), duration: 1, ease: "figmaSmartM" }, 1)
-        .to(".m-hero-subtitle", { opacity: 0, y: vh(-260), duration: 1, ease: "figmaSmartM" }, 1)
-        .to(".m-hero-phone", { y: vh(-180), scale: 1.12, duration: 1, ease: "figmaSmartM" }, 1)
-        .to(".m-hero-cta", { y: vh(-150), duration: 1, ease: "figmaSmartM" }, 1);
-    }, sectionRef);
-
-    return () => ctx.revert();
-  }, []);
-
   return (
     <section
-      ref={sectionRef}
       id="top"
-      className="relative w-full"
-      style={{ height: "200vh" }}
+      className="relative w-full min-h-screen overflow-hidden text-cream"
     >
+      {/* Base gradient — Figma mobile 686:871 */}
       <div
-        ref={stageRef}
-        className="sticky top-0 left-0 h-screen w-screen overflow-hidden text-cream"
-      >
-        {/* Base gradient — Figma mobile 686:871 */}
-        <div
-          className="absolute inset-0"
-          style={{
-            backgroundImage:
-              "linear-gradient(244.09deg, #200009 15.351%, #28020d 84.649%)",
-          }}
-        />
+        className="absolute inset-0"
+        style={{
+          backgroundImage:
+            "linear-gradient(244.09deg, #200009 15.351%, #28020d 84.649%)",
+        }}
+      />
 
-        {/* Texture overlay */}
-        <div
-          aria-hidden
-          className="absolute inset-0 mix-blend-multiply opacity-25 pointer-events-none"
+      {/* Texture overlay */}
+      <div
+        aria-hidden
+        className="absolute inset-0 mix-blend-multiply opacity-25 pointer-events-none"
+      >
+        <Image
+          src="/assets/hero-texture.png"
+          alt=""
+          fill
+          className="object-cover"
+          priority
+        />
+      </div>
+
+      {/* Bottom ink fade — sits on top of the gradient, under the content */}
+      <div
+        aria-hidden
+        className="absolute left-0 right-0 bottom-0 pointer-events-none"
+        style={{
+          height: "40%",
+          background:
+            "linear-gradient(to bottom, rgba(40,2,13,0), #28020d)",
+        }}
+      />
+
+      {/* Single column layout, vertically distributed:
+            • logo  — clears the fixed 88px navbar
+            • title + subtitle
+            • phone mock (decorative wine motif behind it)
+            • CTA copy + Join Waitlist button at the bottom */}
+      <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-[560px] flex-col items-center px-6 pt-[104px] pb-10 text-center">
+        <div className="h-[60px] w-[60px]">
+          <SocialAnimalLogo />
+        </div>
+
+        <h1
+          className="mt-8 font-display text-cream"
+          style={{
+            fontSize: "clamp(2.25rem, 9vw, 3.25rem)",
+            lineHeight: 1.05,
+            letterSpacing: "-0.02em",
+            fontWeight: 500,
+            margin: 0,
+          }}
         >
+          Give yourself an{" "}
+          <span className="font-sans font-semibold italic">unfair</span>{" "}
+          advantage
+        </h1>
+
+        <p
+          className="mt-5 max-w-[440px] font-sans"
+          style={{
+            color: "#ffffff",
+            fontSize: "clamp(0.875rem, 3.6vw, 1.0625rem)",
+            lineHeight: 1.35,
+            letterSpacing: "-0.02em",
+            margin: 0,
+          }}
+        >
+          Life isn’t fair. It’s much easier for individuals with charisma. But
+          the good news is that social skills aren’t fixed - they can be
+          learned. And the even better news is that we’re building the first
+          great training tool.
+        </p>
+
+        {/* Phone + decorative wine motif. Sized to roughly fill the space
+            between subtitle and CTA, no scroll choreography. */}
+        <div className="relative mx-auto mt-8 aspect-square w-[88%] max-w-[420px]">
+          <img
+            src="/assets/hero-soft-light-bg.svg"
+            alt=""
+            aria-hidden
+            className="absolute inset-0 h-full w-full opacity-60"
+          />
           <Image
-            src="/assets/hero-texture.png"
+            src="/assets/hero-phone-mock.png"
             alt=""
             fill
-            className="object-cover"
+            className="object-contain"
+            sizes="90vw"
             priority
           />
         </div>
 
-        <MCanvas>
-          {/* Decorative wine logo motif behind the phone */}
-          <MBox
-            cx={50}
-            top={760}
-            width={760}
-            height={723}
-            className="m-hero-phone opacity-0 pointer-events-none"
-          >
-            <img
-              src="/assets/hero-soft-light-bg.svg"
-              alt=""
-              className="absolute inset-0 block w-full h-full opacity-60"
-            />
-          </MBox>
+        <p
+          className="mt-8 font-sans text-cream"
+          style={{
+            fontSize: "clamp(1rem, 4.4vw, 1.25rem)",
+            lineHeight: 1.3,
+            letterSpacing: "-0.02em",
+            margin: 0,
+          }}
+        >
+          Want to be among the first to try it?
+          <br />
+          Sign up for the waitlist here
+        </p>
 
-          {/* Logo — splash center, settles to top */}
-          <MBox cx={50} top={92} width={110} height={105} className="m-hero-logo">
-            <SocialAnimalLogo />
-          </MBox>
-
-          {/* Title */}
-          <MCenteredText cx={50} top={420} width={870} className="m-hero-title">
-            <h1
-              className="font-display text-cream"
-              style={{
-                fontSize: "clamp(2.25rem, 9vw, 3.25rem)",
-                lineHeight: 1.05,
-                letterSpacing: "-0.02em",
-                fontWeight: 500,
-                margin: 0,
-              }}
-            >
-              Give yourself an{" "}
-              <span className="font-sans font-semibold italic">unfair</span>{" "}
-              advantage
-            </h1>
-          </MCenteredText>
-
-          {/* Subtitle */}
-          <MCenteredText cx={50} top={660} width={820} className="m-hero-subtitle">
-            <p
-              className="font-sans"
-              style={{
-                color: "#ffffff",
-                fontSize: "clamp(0.875rem, 3.6vw, 1.0625rem)",
-                lineHeight: 1.3,
-                letterSpacing: "-0.02em",
-                margin: 0,
-              }}
-            >
-              Life isn’t fair. It’s much easier for individuals with charisma.
-              But the good news is that social skills aren’t fixed - they can
-              be learned. And the even better news is that we’re building the
-              first great training tool.
-            </p>
-          </MCenteredText>
-
-          {/* Phone mockup — rises from bottom */}
-          <MBox
-            cx={50}
-            top={900}
-            width={820}
-            height={820}
-            className="m-hero-phone opacity-0 pointer-events-none"
-          >
-            <Image
-              src="/assets/hero-phone-mock.png"
-              alt=""
-              fill
-              className="object-contain"
-              sizes="100vw"
-              priority
-            />
-          </MBox>
-
-          {/* Bottom ink fade */}
-          <div
-            aria-hidden
-            className="absolute left-0 right-0 bottom-0 pointer-events-none"
-            style={{
-              height: `${(620 / M_H) * 100}%`,
-              background:
-                "linear-gradient(to bottom, rgba(40,2,13,0), #28020d)",
-            }}
-          />
-
-          {/* CTA copy + button */}
-          <div className="m-hero-cta opacity-0">
-            <MCenteredText cx={50} top={1560} width={760}>
-              <p
-                className="font-sans text-cream"
-                style={{
-                  fontSize: "clamp(1rem, 4.4vw, 1.375rem)",
-                  lineHeight: 1.2,
-                  letterSpacing: "-0.02em",
-                  margin: 0,
-                }}
-              >
-                Want to be among the first to try it?
-                <br />
-                Sign up for the waitlist here
-              </p>
-            </MCenteredText>
-            <div
-              className="absolute"
-              style={{
-                top: `${(1690 / M_H) * 100}%`,
-                left: "50%",
-                transform: "translateX(-50%)",
-                width: `${(360 / M_W) * 100}%`,
-                height: `${(120 / M_H) * 100}%`,
-              }}
-            >
-              <Link
-                href="/waitlist"
-                className="flex h-full w-full items-center justify-center rounded-full bg-cream text-ink font-sans font-semibold transition-transform hover:scale-[1.03]"
-                style={{
-                  fontSize: "clamp(1rem, 4.4vw, 1.375rem)",
-                  letterSpacing: "-0.02em",
-                }}
-              >
-                Join Waitlist
-              </Link>
-            </div>
-          </div>
-        </MCanvas>
+        <Link
+          href="/waitlist"
+          className="mt-5 inline-flex h-[56px] items-center justify-center rounded-full bg-cream px-10 font-sans font-semibold text-ink transition-transform hover:scale-[1.03]"
+          style={{
+            fontSize: "clamp(1rem, 4.4vw, 1.2rem)",
+            letterSpacing: "-0.02em",
+          }}
+        >
+          Join Waitlist
+        </Link>
       </div>
     </section>
-  );
-}
-
-/* ───────── mobile primitives (portrait canvas) ───────── */
-
-function MCanvas({ children }: { children: React.ReactNode }) {
-  return (
-    <div
-      className="absolute inset-0 mx-auto"
-      style={{
-        maxWidth: `min(100vw, ${(M_W / M_H) * 100}vh)`,
-        aspectRatio: `${M_W} / ${M_H}`,
-      }}
-    >
-      {children}
-    </div>
-  );
-}
-
-function MBox({
-  cx,
-  top,
-  width,
-  height,
-  className = "",
-  children,
-}: {
-  cx: number;
-  top: number;
-  width: number;
-  height: number;
-  className?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div
-      className={`absolute ${className}`}
-      style={{
-        left: `${cx}%`,
-        top: `${(top / M_H) * 100}%`,
-        width: `${(width / M_W) * 100}%`,
-        height: `${(height / M_H) * 100}%`,
-        transform: "translateX(-50%)",
-      }}
-    >
-      {children}
-    </div>
-  );
-}
-
-function MCenteredText({
-  cx,
-  top,
-  width,
-  className = "",
-  children,
-}: {
-  cx: number;
-  top: number;
-  width: number;
-  className?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div
-      className={`absolute text-center ${className}`}
-      style={{
-        left: `${cx}%`,
-        top: `${(top / M_H) * 100}%`,
-        width: `${(width / M_W) * 100}%`,
-        transform: "translateX(-50%)",
-      }}
-    >
-      {children}
-    </div>
   );
 }
 

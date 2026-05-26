@@ -53,8 +53,8 @@ export function Purpose() {
             Social ability is more important than ever. And it’s not true that
             “some people have it and some do not”. People skills can be learned.
             And we’re on a mission to build the world’s first great training
-            tool. We’re here for everyone who’s ever felt awkward, shy, or under
-            appreciated.
+            tool. We’re here for everyone who’s ever felt awkward, shy, or
+            underappreciated.
           </p>
         </div>
 
@@ -165,8 +165,8 @@ export function Purpose() {
           Social ability is more important than ever. And it’s not true that
           “some people have it and some do not”. People skills can be learned.
           And we’re on a mission to build the world’s first great training
-          tool. We’re here for everyone who’s ever felt awkward, shy, or under
-          appreciated.
+          tool. We’re here for everyone who’s ever felt awkward, shy, or
+          underappreciated.
         </p>
 
         {/* Footer starts after the first 1080px frame. */}

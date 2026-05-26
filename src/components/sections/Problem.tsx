@@ -106,7 +106,16 @@ function ProblemDesktop() {
           avatarStyle={{
             left: x(487), // 507 - 20 (re-center after 120→160)
             top: y(805), // 825 - 20
-            objectPosition: "50% 25%",
+            // The source is a full-body shot with the face near the top
+            // of the frame. We zoom INSIDE the circle (frame stays put)
+            // and anchor the zoom to the face so it ends up centred:
+            //   • objectPosition picks the focal point on the source
+            //     (45% across, 18% down ≈ the face).
+            //   • transformOrigin is auto-matched to that same point in
+            //     the QuoteCard renderer, so scaling enlarges the face
+            //     in place instead of pushing it off-circle.
+            objectPosition: "35% 8%",
+            scale: 1.56,
           }}
         />
 
@@ -136,7 +145,11 @@ function ProblemDesktop() {
           avatarStyle={{
             left: x(1543),
             top: y(324.5),
-            objectPosition: "50% 22%",
+            // Half-body source — face already centred horizontally near the
+            // top quarter. Zoom 1.3× anchored on the face so the head fills
+            // more of the visible circle, matching the Nadella treatment.
+            objectPosition: "70% 2%",
+            scale: 1.3,
           }}
         />
 
@@ -161,7 +174,10 @@ function ProblemDesktop() {
             left: x(1324),
             top: y(929),
             withBackdrop: true,
-            objectPosition: "50% 30%",
+            // Half-body source — face centred near 30% down. Same 1.3×
+            // treatment as Colvin so all three avatars feel consistent.
+            objectPosition: "60% -10%",
+            scale: 1.1,
           }}
         />
 
@@ -197,52 +213,46 @@ function ProblemDesktop() {
           />
         </div>
 
-        {/* 557:718 — man portrait (161.92, 1527, 717×753).
-            Per user feedback: image is mirrored horizontally (so the face
-            looks toward the body copy on the right), and the bottom is
-            cropped further so the legs/feet are out of view. We shorten
-            the container height and shift it down so the face stays at the
-            same vertical position, while the bottom of the image falls
-            below the section. */}
+        {/* 557:718 — man portrait, centred on the star outline.
+            Per user feedback:
+            - NOT mirrored (original orientation restored).
+            - Same crop treatment as the Product step-04 woman portrait:
+              object-cover with objectPosition 50% 10% (shoulders-up).
+            - Horizontally centred on the star outline. Star centre X =
+              114 + 828.4/2 = 528.2 → left = 528.2 - 947/2 ≈ 55. */}
         <div
           className="absolute pointer-events-none overflow-hidden"
           style={{
-            left: x(56), // shifted left to keep it centred at the larger size
-            top: y(1460),
-            width: w(947), // enlarged ~32% over the original 717 per feedback
-            height: h(820), // crops legs/feet off the bottom
+            // Narrower than the star (w 828.4) so the star's radiating
+            // wings stay visible on either side of the man. Centred on the
+            // star centre X=528.2 → left = 528.2 - 620/2 ≈ 218.
+            // Per feedback: container top shifted down by 15% of its own
+            // height (720 × 0.15 ≈ 108px) so the entire man visibly drops
+            // within the blue panel (was 1460, now 1568). object-position
+            // alone wasn't producing a noticeable change because the
+            // source is close to the container's aspect ratio.
+            left: x(218),
+            top: y(1568),
+            width: w(620),
+            height: h(720),
           }}
         >
           <Image
             src="/assets/problem-man.png"
             alt=""
             fill
-            className="object-contain object-top"
-            style={{ transform: "scaleX(-1)" }}
+            className="object-cover"
+            style={{ objectPosition: "50% 10%" }}
             sizes="37vw"
           />
         </div>
 
-        {/* 557:736 — cream highlight rectangle behind the word "watching".
-            Repositioned per feedback so it actually overlaps the word: the
-            heading wraps to "anybody watching." on the third line, so the
-            marker sits a touch left and higher to land under "watching". */}
-        <div
-          aria-hidden
-          className="absolute"
-          style={{
-            left: x(1485),
-            top: y(1776),
-            width: w(360),
-            height: h(72),
-            background: "#fff8f3",
-            transform: "rotate(-2.65deg)",
-            transformOrigin: "center",
-          }}
-        />
-
         {/* 557:737 — heading (1205, 1619, 595×194). 66px / 74px leading
-            Global Y: 1200 + 419 = 1619 */}
+            Global Y: 1200 + 419 = 1619.
+            The cream marker is anchored INSIDE the inline-block wrapping
+            "watching" so it tracks the word at any viewport width — the
+            old absolute-positioned marker drifted off the word whenever
+            the line wrap changed. */}
         <h2
           className="absolute font-display text-plum"
           style={{
@@ -255,7 +265,23 @@ function ProblemDesktop() {
           }}
         >
           Improve your social ability without anybody{" "}
-          <span className="font-sans font-semibold italic">watching</span>.
+          <span className="relative inline-block">
+            <span
+              aria-hidden
+              className="absolute -z-10"
+              style={{
+                left: "-4%",
+                right: "-4%",
+                top: "30%",
+                bottom: "6%",
+                background: "#fff8f3",
+                transform: "rotate(-2.65deg)",
+                transformOrigin: "center",
+              }}
+            />
+            <span className="font-sans font-semibold italic">watching</span>
+          </span>
+          .
         </h2>
 
         {/* 557:738 — body copy. Pushed down from the original y=1903 to
@@ -358,6 +384,8 @@ function ProblemMobile() {
                 name="Geoff Colvin,"
                 title="Expert on the future of work."
                 avatar="/assets/avatar-colvin.png"
+                avatarObjectPosition="60% 2%"
+                avatarScale={1.3}
               />
             </div>
             <div className="absolute right-[4%] top-[54%] w-[80%] rotate-[2deg]">
@@ -367,6 +395,8 @@ function ProblemMobile() {
                 name="Jamie Dimon,"
                 title="CEO of JP Morgan Chase."
                 avatar="/assets/avatar-dimon.png"
+                avatarObjectPosition="60% 3%"
+                avatarScale={1.1}
               />
             </div>
             <div className="absolute left-[6%] top-[106%] w-[78%] -rotate-[2deg]">
@@ -376,6 +406,11 @@ function ProblemMobile() {
                 name="Satya Nadella,"
                 title="CEO of Microsoft."
                 avatar="/assets/avatar-nadella.png"
+                // Matches the desktop Nadella treatment — full-body source,
+                // so we anchor the zoom on the face (35% across, 8% down)
+                // and enlarge ~1.56× to bring the head into the circle.
+                avatarObjectPosition="35% 8%"
+                avatarScale={1.56}
               />
             </div>
           </div>
@@ -445,6 +480,10 @@ interface QuoteCardProps {
   avatarStyle: React.CSSProperties & {
     withBackdrop?: boolean;
     objectPosition?: string;
+    // Scales the avatar tile while keeping its centre at the same `left`/`top`
+    // anchor — used to enlarge the face within the circle without nudging
+    // surrounding card layout.
+    scale?: number;
   };
 }
 
@@ -480,7 +519,7 @@ function QuoteCard({
   avatarStyle,
 }: QuoteCardProps) {
   const { bg, quoteInk, bylineInk } = TONE[tone];
-  const { withBackdrop, objectPosition, ...avatarPos } = avatarStyle;
+  const { withBackdrop, objectPosition, scale, ...avatarPos } = avatarStyle;
 
   const quoteFontSize =
     typeof quoteStyle.fontSize === "number"
@@ -557,7 +596,20 @@ function QuoteCard({
           fill
           className="object-cover"
           sizes="160px"
-          style={objectPosition ? { objectPosition } : undefined}
+          style={{
+            ...(objectPosition ? { objectPosition } : null),
+            // Scale the image inside the circle (not the circle itself).
+            // transformOrigin is pinned to objectPosition so the zoom is
+            // anchored to the focal point of the photo (the face), not the
+            // image's geometric centre — otherwise the scale would push the
+            // face back off the circle's centre.
+            ...(scale && scale !== 1
+              ? {
+                  transform: `scale(${scale})`,
+                  transformOrigin: objectPosition ?? "50% 50%",
+                }
+              : null),
+          }}
         />
       </div>
     </>
@@ -572,9 +624,22 @@ interface MobileQuoteProps {
   name: string;
   title: string;
   avatar: string;
+  // Same semantics as the desktop QuoteCard avatar params: the circle stays
+  // a fixed 72px, the photo inside it can be panned (objectPosition) and
+  // zoomed (scale, anchored at objectPosition) to centre on the face.
+  avatarObjectPosition?: string;
+  avatarScale?: number;
 }
 
-function MobileQuote({ tone, quote, name, title, avatar }: MobileQuoteProps) {
+function MobileQuote({
+  tone,
+  quote,
+  name,
+  title,
+  avatar,
+  avatarObjectPosition,
+  avatarScale = 1,
+}: MobileQuoteProps) {
   const { bg, quoteInk } = TONE[tone];
   return (
     <div
@@ -589,13 +654,26 @@ function MobileQuote({ tone, quote, name, title, avatar }: MobileQuoteProps) {
           <br />
           <span className="font-light ml-2">{title}</span>
         </p>
-        <Image
-          src={avatar}
-          alt=""
-          width={88}
-          height={88}
-          className="h-[72px] w-[72px] rounded-full object-cover shrink-0"
-        />
+        <div className="relative h-[72px] w-[72px] shrink-0 overflow-hidden rounded-full">
+          <Image
+            src={avatar}
+            alt=""
+            fill
+            sizes="72px"
+            className="object-cover"
+            style={{
+              ...(avatarObjectPosition
+                ? { objectPosition: avatarObjectPosition }
+                : null),
+              ...(avatarScale !== 1
+                ? {
+                    transform: `scale(${avatarScale})`,
+                    transformOrigin: avatarObjectPosition ?? "50% 50%",
+                  }
+                : null),
+            }}
+          />
+        </div>
       </div>
     </div>
   );
